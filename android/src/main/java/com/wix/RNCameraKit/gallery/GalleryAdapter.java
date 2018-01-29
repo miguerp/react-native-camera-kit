@@ -57,13 +57,17 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
         Integer height;
         Integer orientation;
 
-        public Image(String uri, Integer id, String mimeType, Integer width, Integer height,Integer orientation) {
+        public Image(String uri, Integer id, String mimeType, Integer width, Integer height, Integer orientation) {
             this.uri = uri;
             this.id = id;
             this.mimeType = mimeType;
             this.width = width;
             this.height = height;
             this.orientation = orientation;
+        }
+
+        public String getUri() {
+            return this.uri;
         }
     }
 
@@ -83,8 +87,16 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
             super(itemView);
         }
 
+        public Image getImage() {
+            return image;
+        }
+
+        public SelectableImage getImageView() {
+            return (SelectableImage) this.itemView;
+        }
+
         public void bind(int position) {
-            final Image image  = images.get(position);
+            final Image image = images.get(position);
             this.image = image;
             this.isSupported = isSupported(image);
 
@@ -94,7 +106,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
             final SelectableImage selectableImageView = (SelectableImage) this.itemView;
             selectableImageView.setUnsupportedUIParams(overlayColor, unsupportedFinalImage, unsupportedText, unsupportedTextColor);
             selectableImageView.setDrawables(selectedDrawable, unselectedDrawable, selectionOverlayColor);
-            selectableImageView.bind(executor, selected, forceBind, image.id, isSupported,image.orientation);
+            selectableImageView.bind(executor, selected, forceBind, image.id, isSupported, image.orientation);
             selectableImageView.setOnClickListener(this);
         }
 
@@ -189,6 +201,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
 
     private boolean isDirty = true;
     private ArrayList<Image> images = new ArrayList<>();
+    private ArrayList<ImageHolder> imageHolderList = new ArrayList<>();
 
     public GalleryAdapter(ReactContext reactContext, GalleryView galleryView) {
         this.reactContext = reactContext;
@@ -207,6 +220,17 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
 
     public void setSelectedUris(ArrayList<String> selectedUris) {
         this.selectedUris = selectedUris;
+    }
+
+    public void updateSelectedUris(ArrayList<String> selectedUris) {
+        this.selectedUris = selectedUris;
+        for (ImageHolder imageHolder : imageHolderList) {
+            String imageUri = imageHolder.getImage().getUri();
+            SelectableImage selectableImage = imageHolder.getImageView();
+            boolean selected = false;
+            selected = selectedUris.contains(imageUri);
+            selectableImage.setSelected(selected);
+        }
     }
 
     void setDirtyUris(List<String> dirtyUris) {
@@ -310,7 +334,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
         }
 
         if (shouldShowCustomButton()) {
-            images.add(new Image(null, -1, "", 0, 0,0));
+            images.add(new Image(null, -1, "", 0, 0, 0));
         }
         Collections.reverse(images);
         cursor.close();
@@ -347,7 +371,9 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
             SelectableImage v = new SelectableImage(reactContext, selectedDrawableGravity, selectedDrawableSize);
             v.setScaleType(ImageView.ScaleType.CENTER_CROP);
             v.setBackgroundColor(Color.LTGRAY);
-            return new ImageHolder(v);
+            ImageHolder imgH = new ImageHolder(v);
+            imageHolderList.add(imgH);
+            return imgH;
         }
 
         if (viewType == VIEW_TYPE_CUSTOM_BUTTON) {
