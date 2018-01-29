@@ -10,6 +10,7 @@ const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSou
 const GalleryView = requireNativeComponent('GalleryView', null);
 const ALL_PHOTOS = 'All Photos';
 const COMMAND_REFRESH_GALLERY = 1;
+const COMMAND_SET_SELECTED_URIS = 2;
 
 export default class CameraKitGalleryView extends Component {
 
@@ -23,6 +24,15 @@ export default class CameraKitGalleryView extends Component {
         ReactNative.findNodeHandle(this),
         COMMAND_REFRESH_GALLERY,
         [lastEditedImage]
+    );
+    return true;
+  }
+
+  async setSelectedUris(selectedUris = []) {
+    UIManager.dispatchViewManagerCommand(
+        ReactNative.findNodeHandle(this),
+        COMMAND_SET_SELECTED_URIS,
+        selectedUris,
     );
     return true;
   }
