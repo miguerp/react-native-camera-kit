@@ -130,16 +130,20 @@ export default class CameraScreenBase extends Component {
       <View style={styles.cameraContainer}>
         {
           this.isCaptureRetakeMode() ?
-          <Image
-            style={{flex: 1, justifyContent: 'flex-end'}}
-            source={{uri: this.state.imageCaptured.uri}}
-          /> :
-          <CameraKitCamera
-            ref={(cam) => this.camera = cam}
-            style={{flex: 1, justifyContent: 'flex-end'}}
-            cameraOptions={this.state.cameraOptions}
-            onReadCode={this.props.onReadCode}
-          />
+            <Image
+              style={{ flex: 1, justifyContent: 'flex-end' }}
+              source={{ uri: this.state.imageCaptured.uri }}
+            /> :
+            <CameraKitCamera
+              ref={(cam) => this.camera = cam}
+              style={{ flex: 1, justifyContent: 'flex-end' }}
+              cameraOptions={this.state.cameraOptions}
+              showFrame={this.props.showFrame}
+              scanBarcode={this.props.scanBarcode}
+              laserColor={this.props.laserColor}
+              frameColor={this.props.frameColor}
+              onReadCode={this.props.onReadCode}
+            />
         }
       </View>
     );
@@ -163,14 +167,15 @@ export default class CameraScreenBase extends Component {
           onPress={() => this.onCaptureImagePressed()}
         >
           <Image
-            style={styles.captureButton}
             source={this.props.captureButtonImage}
             resizeMode={'contain'}
-          >
-            <Text style={styles.captureNumber}>
+          />
+          <View style={styles.textNumberContainer}>
+            <Text>
               {this.numberOfImagesTaken()}
             </Text>
-          </Image>
+          </View>
+
         </TouchableOpacity>
       </View >
   }
@@ -195,7 +200,7 @@ export default class CameraScreenBase extends Component {
   }
 
   sendBottomButtonPressedAction(type, captureRetakeMode, image) {
-    if(this.props.onBottomButtonPressed) {
+    if (this.props.onBottomButtonPressed) {
       this.props.onBottomButtonPressed({ type, captureImages: this.state.captureImages, captureRetakeMode, image })
     }
   }
@@ -203,14 +208,14 @@ export default class CameraScreenBase extends Component {
   async onButtonPressed(type) {
     const captureRetakeMode = this.isCaptureRetakeMode();
     if (captureRetakeMode) {
-      if(type === 'left') {
+      if (type === 'left') {
         GalleryManager.deleteTempImage(this.state.imageCaptured.uri);
-        this.setState({imageCaptured: undefined});
+        this.setState({ imageCaptured: undefined });
       }
-      else if(type === 'right') {
+      else if (type === 'right') {
         const result = await GalleryManager.saveImageURLToCameraRoll(this.state.imageCaptured.uri);
-        const savedImage = {...this.state.imageCaptured, ...result}; // Note: Can't just return 'result' as on iOS not all data is returned by the native call (just the ID).
-        this.setState({imageCaptured: undefined, captureImages: _.concat(this.state.captureImages, savedImage)}, () => {
+        const savedImage = { ...this.state.imageCaptured, ...result }; // Note: Can't just return 'result' as on iOS not all data is returned by the native call (just the ID).
+        this.setState({ imageCaptured: undefined, captureImages: _.concat(this.state.captureImages, savedImage) }, () => {
           this.sendBottomButtonPressedAction(type, captureRetakeMode);
         });
       }
@@ -244,7 +249,7 @@ export default class CameraScreenBase extends Component {
 
   renderBottomButtons() {
     return (
-      <View style={[styles.bottomButtons, {backgroundColor: '#ffffff00'}]}>
+      <View style={[styles.bottomButtons, { backgroundColor: '#ffffff00' }]}>
         {this.renderBottomButton('left')}
         {this.renderCaptureButton()}
         {this.renderBottomButton('right')}
@@ -318,16 +323,14 @@ const styles = StyleSheet.create(_.merge(styleObject, {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  captureButton: {
-    flex: 1,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  captureNumber: {
+  textNumberContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
     justifyContent: 'center',
-    color: 'black',
-    backgroundColor: 'transparent'
+    alignItems: 'center'
   },
   bottomButton: {
     flex: 1,
